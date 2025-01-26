@@ -1,25 +1,26 @@
 let modInfo = {
-	name: "The ??? Tree",
-	author: "nobody",
+	name: "Arcaea Tree",
+	author: "cb1eb943975c4969",
 	pointsName: "points",
-	modFiles: ["layers.js", "tree.js"],
+	modFiles: ["layers.js", "tree.js","functions.js"],
 
 	discordName: "",
 	discordLink: "",
-	initialStartPoints: new Decimal (10), // Used for hard resets and new players
-	offlineLimit: 1,  // In hours
+	initialStartPoints: new Decimal (0), // Used for hard resets and new players
+	offlineLimit: 0,  // In hours
 }
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.0",
-	name: "Literally nothing",
+	num: "0.1",
+	name: "The Origin",
 }
 
-let changelog = `<h1>Changelog:</h1><br>
-	<h3>v0.0</h3><br>
-		- Added things.<br>
-		- Added stuff.`
+let changelog = `<h2>Changelog:</h2><br>
+	<h3>v0.1</h3><br>
+		- Added Fragments, Memories and Song Packs.<br>
+		- Added 25 upgrades, 3 milestones, a buyable, and 3 achievements.<br>
+		- Endgame: 2e11 Fragments (about 2e12 points).`
 
 let winText = `Congratulations! You have reached the end and beaten this game, but for now...`
 
@@ -42,6 +43,15 @@ function getPointGen() {
 		return new Decimal(0)
 
 	let gain = new Decimal(1)
+	if(hasUpgrade("f",11)) gain = gain.mul(2)
+	if(hasUpgrade("f",12)) gain = gain.mul(2)
+	if(hasUpgrade("f",13)) gain = gain.mul(upgradeEffect("f",13))
+	if(hasUpgrade("sp",12)) gain = gain.mul(upgradeEffect("sp",12))
+	if(hasUpgrade("sp",15)) gain = gain.pow(1.25)
+	if(hasUpgrade("sp",22)) gain = gain.mul(4)
+	if(hasUpgrade("sp",25)) gain = gain.mul(5)
+	if(hasUpgrade("sp",32)) gain = gain.pow(1.1)
+	if(hasUpgrade("m",11)) gain = gain.mul(tmp.m.effect)
 	return gain
 }
 
