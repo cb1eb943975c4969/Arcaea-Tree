@@ -35,6 +35,7 @@ addLayer("f", {
     if(hasUpgrade("sp",13)) mult = mult.mul(upgradeEffect("sp",13))
     if(hasUpgrade("sp",14)) mult = mult.mul(upgradeEffect("sp",14))
     if(hasUpgrade("sp",24)) mult = mult.mul(upgradeEffect("sp",24))
+    if(hasUpgrade("sp",31)) mult = mult.pow(1.015)
     mult = mult.mul(tmp.m.effect)
     return mult
   },
@@ -298,7 +299,7 @@ addLayer("sp", {
     },
     31: {
       title: "SUPERNOVA PST 3",
-      description: "Raise Fragment gain to the 1.05th power.",
+      description: "Raise Fragment gain to the 1.015th power.",
       cost: new Decimal(50000),
       currencyDisplayName: "Fragments",
       currencyInternalName: "points",
