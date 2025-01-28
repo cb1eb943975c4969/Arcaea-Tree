@@ -20,7 +20,7 @@ let changelog = `<h2>Changelog:</h2><br>
 	<h3>v0.1</h3><br>
 		- Added Fragments, Memories and Song Packs.<br>
 		- Added 25 upgrades, 3 milestones, a buyable, and 3 achievements.<br>
-		- Endgame: 2e11 Fragments (about 2e12 points).`
+		- Endgame: 3e12 Fragments (about 4.5e14 points).`
 
 let winText = `Congratulations! You have reached the end and beaten this game, but for now...`
 
