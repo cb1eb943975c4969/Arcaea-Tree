@@ -28,7 +28,8 @@ function checkAroundGrid(layer,id){
 //指数软上限
 function powsoftcap(num,start,power){
 	if(num.gt(start)){
-		num = num.root(power).mul(start.pow(one.sub(one.div(power))))
+	  a = n(start).pow(one.sub(one.div(power)))
+		num = num.root(power).mul(a)
 	}
     return num
 }
