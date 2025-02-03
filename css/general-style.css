@@ -39,3 +39,42 @@ h1, h2, h3, b, input {
 	color: var(--points);
 	text-shadow: 0 0 10px var(--points);
 }
+
+#newsticker {
+	position: absolute;
+	top: 5px;
+	right: 5px;
+	left: 5px;
+	height: 28px;
+	line-height: 18px;
+	padding: 0;
+	display: block;
+	background: var(--background);
+	border: 3px solid var(--color);
+	border-radius: 5px;
+	overflow: hidden;
+	user-select: none;
+}
+
+#newsticker > div {
+	position: absolute;
+	height: 18px;
+	top: 0px;
+	margin: 5px 10px;
+	width: max-content;
+	transition: transform linear .2s;
+}
+
+#newsticker > .new {
+	transition: none;
+}
+
+#newsticker a {
+	color: #02f2f2;
+}
+#newsticker ~ .col, #newsticker ~ .fullWidth {
+	top: 45px;
+	height: calc(100% - 45px);
+	min-height: calc(100% - 45px);
+	margin-top: 0px;
+}

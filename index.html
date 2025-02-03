@@ -22,6 +22,7 @@
 
 	<script src="js/technical/temp.js"></script>
 	<script src="js/technical/displays.js"></script>
+	<script src="js/technical/newsTicker.js"></script>
 	
 	<script src="js/game.js"></script>
 	<script src="js/utils.js"></script>
@@ -64,7 +65,7 @@
 				Prestige Tree server</a><br>
 			<br><br>
 		</div>
-
+        <news-ticker v-if="options.newsTicker"></news-ticker>
 		<div id="treeOverlay" v-if="!(tmp.gameEnded && !player.keepGoing) && (player.tab === 'none' || tmp.other.splitScreen || !readData(layoutInfo.showTree))" class="treeOverlay" onscroll="resizeCanvas()"
 			v-bind:class="{ 
 			fullWidth: (player.tab == 'none' || player.navTab == 'none'), 

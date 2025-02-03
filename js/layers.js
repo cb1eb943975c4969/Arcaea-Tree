@@ -21,7 +21,7 @@ addLayer("f", {
   doReset(resettingLayer) {
     if(layers[resettingLayer].row > layers[this.layer].row) {
       let keep = []
-      if(resettingLayer == "m" && hasMilestone("m",1)) {keep.push("upgrades")}
+      if(resettingLayer == "m" && hasMilestone("m",1)) keep.push("upgrades")
       layerDataReset(this.layer,keep)
     }
   },
@@ -37,13 +37,22 @@ addLayer("f", {
     if(hasUpgrade("sp",24)) mult = mult.mul(upgradeEffect("sp",24))
     if(hasUpgrade("sp",31)) mult = mult.pow(1.015)
     mult = mult.mul(tmp.m.effect)
-    if(player.f.points.gte(1e12)) mult = powsoftcap(mult,1000,2)
     return mult
   },
   gainExp() { // Calculate the exponent on main currency from bonuses
     let exponent = new Decimal(1)
     if(hasUpgrade("sp",31)) exponent = exponent.add(0.05)
     return exponent
+  },
+  directMult() {
+    let dmult = new Decimal(1)
+    dmult = dmult.mul(buyableEffect("p",11))
+    return dmult
+  },
+  softcap: new Decimal(1e11),
+  softcapPower: function() {
+    if(hasUpgrade("m",22)) return 0.425
+    return 0.4
   },
   tabFormat: {
     "Main": {
@@ -90,6 +99,7 @@ addLayer("f", {
   layerShown() {return true}
 })
 
+
 addLayer("sp", {
   name: "song_pack",
   symbol: "SP",
@@ -99,17 +109,18 @@ addLayer("sp", {
   startData() {return {
         unlocked: true,
 		    points: new Decimal(0),
+		    hollowCores: new Decimal(0),
+		    desolateCores: new Decimal(0)
   }},
   color: "#D52BE8",
   resource: "",
   doReset(resettingLayer) {
     if(layers[resettingLayer].row > layers[this.layer].row) {
       let keep = []
-      if(resettingLayer == "m" && hasMilestone("m",3)) keep.push(11,12,13,14,15,21,22,23,24,25)
-      if(resettingLayer == "m" && hasMilestone("m",4)) keep.push(31,32,33,34,35)
-      if(hasUpgrade("sp",45)) keep.push(45)
-      layerDataReset(this.layer,[])
-      player.sp.upgrades = player.sp.upgrades.concat(keep)
+      layerDataReset(this.layer,keep)
+      if(resettingLayer == "m" && hasMilestone("m",3)) player.sp.upgrades.push(11,12,13,14,15,21,22,23,24,25)
+      if(resettingLayer == "m" && hasMilestone("m",4)) player.sp.upgrades.push(31,32,33,34,35)
+      if(resettingLayer == "m" && hasMilestone("m",5)) player.sp.upgrades.push(41,42,43,44,45)
     }
   },
   tabFormat: {
@@ -120,9 +131,10 @@ addLayer("sp", {
             let a = "You have <h2 style='color: #3CD3E3; text-shadow: 0 0 10px #3CD3E3'>" + format(player.f.points) + "</h3> Fragments. "
             let a1 = "(+" + format(getResetGain("f")) + " on reset)"
             let a2 = "(+" + format(getResetGain("f").mul(0.1)) + "/s)"
-            if(player.f.points.gte(1e12)) a2 = a2 + "(softcapped)"
+            if(getResetGain("f").gte(1e11)) a2 = a2 + "(softcapped)"
             let b = "<br>You have <h2 style='color: #A65E8C; text-shadow: 0 0 10px #A65E8C'>" + format(player.m.points) + "</h3> Memories. "
             let b1 = "(+" + format(getResetGain("m")) + " on reset)"
+            if(getResetGain("m").gte(1000)) b1 = b1 + "(softcapped)"
             if(!player.m.unlocked) return a + a1
             if(player.m.unlocked && !hasMilestone("m",2)) return a + a1 + b + b1
             if(player.m.unlocked && hasMilestone("m",2)) return a + a2 + b + b1
@@ -152,6 +164,14 @@ addLayer("sp", {
       "Eternal Core": {
         content: [
           ["infobox",3],
+          ["display-text",
+            function() {
+              if(!hasUpgrade("sp",121)) return ""
+              let text = "You have <h2 style='color: #244A3F; text-shadow: 0 0 10px #244A3F'>" + format(player.sp.hollowCores) + "</h3> Hollow Cores (<h2 style='color: #244A3F; text-shadow: 0 0 10px #244A3F'>" + format(tmp.sp.hollowCoreGain) + "</h3>/s, starts at 5.00e14 Fragments)."
+              return text
+            },
+            {"color": "#ffffff", "font-size": "14px"}
+          ],
           ["upgrades",[11,12]]
         ],
         unlocked() {return getBuyableAmount("m",11).gte(1)}
@@ -278,17 +298,15 @@ addLayer("sp", {
     },
     24: {
       title: "Babaroque PST 3",
-      description: "Multiplies Fragment gain base on the upgrades you've bought in this song pack.",
+      description: "Multiplies Fragment gain base on the Chart Upgrades you've bought.",
       cost: new Decimal(3000),
       currencyDisplayName: "Fragments",
       currencyInternalName: "points",
       currencyLayer: "f",
       effect() {
         let base = new Decimal(1.06)
-        let count = 0
         if(hasUpgrade(this.layer,41)) base = base.add(0.04)
-        for(let i in player.sp.upgrades) if(parseInt(i) < 110) count++
-        return base.pow(count)
+        return base.pow(player.sp.upgrades.length)
       },
       effectDisplay() {return "x" + format(upgradeEffect(this.layer,this.id))},
       unlocked() {return hasUpgrade(this.layer,23) || player.m.unlocked}
@@ -383,37 +401,114 @@ addLayer("sp", {
       currencyDisplayName: "Fragments",
       currencyInternalName: "points",
       currencyLayer: "f",
-      effect() {return player.points.pow(1/3).div(4500).add(1).log10().add(1)},
+      effect() {return player.f.points.pow(1/3).div(4500).add(1).log10().add(1)},
       effectDisplay() {return "x" + format(upgradeEffect(this.layer,this.id))},
       unlocked() {return hasUpgrade(this.layer,43)}
     },
     45: {
       title: "Oblivia PRS 5",
-      description: "Raise point gain base on Fragments and points. (This upgrade will keep unlocked on Memory reset.)",
-      cost: new Decimal(400),
-      currencyDisplayName: "Memories",
+      description: "Multiply point gain base on the Chart Upgrades you've bought.",
+      cost: new Decimal(6e12),
+      currencyDisplayName: "Fragments",
       currencyInternalName: "points",
-      currencyLayer: "m",
-      effect() {return player.f.points.mul(player.points).add(1).log10().mul(0.002).add(1)},
-      effectDisplay() {return "^" + format(upgradeEffect(this.layer,this.id),4)},
-      unlocked() {return hasUpgrade(this.layer,44) || hasUpgrade(this.layer,45)}
+      currencyLayer: "f",
+      effect() {
+        let base = new Decimal(1.2)
+        return base.pow(player.sp.upgrades.length)
+      },
+      effectDisplay() {return "x" + format(upgradeEffect(this.layer,this.id))},
+      unlocked() {return hasUpgrade(this.layer,44)}
     },
     111: {
       title: "cry of viyella PST 3",
-      description: "Multiply point gain base on the upgrades you've bought in this song pack.<br>(Current Endgame)",
+      description: "Multiply Memory gain base on Memories.",
       cost: new Decimal(3e12),
       currencyDisplayName: "Fragments",
       currencyInternalName: "points",
       currencyLayer: "f",
       effect() {
-        let base = new Decimal(1.5)
-        let count = 0
-        for(let i in player.sp.upgrades) if(parseInt(i) >= 111 && parseInt(i) < 210) count++
-        return base.pow(count)
+        let division = 70
+        if(hasUpgrade(this.layer,113)) division = 50
+        return player.m.points.pow(0.5).div(division).add(1).log10().add(1)
       },
       effectDisplay() {return "x" + format(upgradeEffect(this.layer,this.id))},
       unlocked() {return getBuyableAmount("m",11).gte(1)}
+    },
+    112: {
+      title: "Essence of Twilight PST 4",
+      description: "Unlock Partners.",
+      cost: new Decimal(1e13),
+      currencyDisplayName: "Fragments",
+      currencyInternalName: "points",
+      currencyLayer: "f",
+      onPurchase() {player.p.unlocked = true},
+      unlocked() {return hasUpgrade(this.layer,111)}
+    },
+    113: {
+      title: "PRAGMATISM PST 4",
+      description: "Slightly improve the effect formula of \"cry of viyella PST 3\".",
+      cost: new Decimal(1e14),
+      currencyDisplayName: "Fragments",
+      currencyInternalName: "points",
+      currencyLayer: "f",
+      unlocked() {return hasUpgrade(this.layer,112)}
+    },
+    114: {
+      title: "Sheriruth PST 5",
+      description: "Increase Hikari's effect base by 0.15.",
+      cost: new Decimal(5e14),
+      currencyDisplayName: "Fragments",
+      currencyInternalName: "points",
+      currencyLayer: "f",
+      unlocked() {return hasUpgrade(this.layer,113)}
+    },
+    121: {
+      title: "memoryfactory.lzh PRS 5",
+      description: "Unlock Hollow Core.",
+      cost: new Decimal(1e15),
+      currencyDisplayName: "Fragments",
+      currencyInternalName: "points",
+      currencyLayer: "f",
+      unlocked() {return hasUpgrade(this.layer,114)}
+    },
+    122: {
+      title: "I've heard it said PRS 6",
+      description: "Multiply point gain base on Hollow Cores.",
+      cost: new Decimal(3),
+      currencyDisplayName: "Hollow Cores",
+      currencyInternalName: "hollowCores",
+      currencyLayer: "sp",
+      effect() {return player.sp.hollowCores.mul(5).add(1)},
+      effectDisplay() {return "x" + format(upgradeEffect(this.layer,this.id))},
+      unlocked() {return hasUpgrade(this.layer,121)}
+    },
+    123: {
+      title: "Relentless PRS 6",
+      description: "Double Hollow Core gain.",
+      cost: new Decimal(5),
+      currencyDisplayName: "Hollow Cores",
+      currencyInternalName: "hollowCores",
+      currencyLayer: "sp",
+      unlocked() {return hasUpgrade(this.layer,122)}
+    },
+    124: {
+      title: "Lumia PRS 5",
+      description: "Slow down Hikari's upgrading cost scale.<br>(Current endgame)",
+      cost: new Decimal(2e16),
+      currencyDisplayName: "Fragments",
+      currencyInternalName: "points",
+      currencyLayer: "f",
+      unlocked() {return hasUpgrade(this.layer,123)}
     }
+  },
+  hollowCoreGain() {
+    if(player.f.points.lte(5e14)) return new Decimal(0)
+    let gain = player.f.points.div(5e14).log10().div(10)
+    if(hasUpgrade("sp",123)) gain = gain.mul(2)
+    return gain 
+  },
+  update(diff) {
+    if(hasUpgrade(this.layer,121)) player.sp.hollowCores = tmp.sp.hollowCoreGain.mul(diff).add(player.sp.hollowCores)
   },
   layerShown() {return hasUpgrade("f",13) || player.m.unlocked}
 })
@@ -424,8 +519,9 @@ addLayer("p", {
   symbol: "P",
   row: 0,
   position: 2,
+  tooltip() {return "Partners"},
   startData() {return {
-    unlocked: true,
+    unlocked: false,
     points: new Decimal(0)
   }},
   color: "#29EB9D",
@@ -441,8 +537,11 @@ addLayer("p", {
             let a = "You have <h2 style='color: #3CD3E3; text-shadow: 0 0 10px #3CD3E3'>" + format(player.f.points) + "</h3> Fragments. "
             let a1 = "(+" + format(getResetGain("f")) + " on reset)"
             let a2 = "(+" + format(getResetGain("f").mul(0.1)) + "/s)"
+            if(getResetGain("f").gte(1e11)) a2 = a2 + "(softcapped)"
             let b = "<br>You have <h2 style='color: #A65E8C; text-shadow: 0 0 10px #A65E8C'>" + format(player.m.points) + "</h3> Memories. "
             let b1 = "(+" + format(getResetGain("m")) + " on reset)"
+            if(getResetGain("m").gte(1000)) b1 = b1 + "(softcapped)"
+            if(!player.m.unlocked) return a + a1
             if(player.m.unlocked && !hasMilestone("m",2)) return a + a1 + b + b1
             if(player.m.unlocked && hasMilestone("m",2)) return a + a2 + b + b1
           },
@@ -480,20 +579,45 @@ addLayer("p", {
   },
   buyables: {
     11: {
-      title() {return "Hikari Lv" + getBuyableAmount(this.layer,this.id)},
-      display() {return "Multiply point gain by 2 per level.<br>Effect: x" + format(this.effect()) + " <br>Cost: " + format(this.cost()) + " Fragments"},
-      cost(x) {
-        return x.add(1).pow(2).mul(1e15)
+      title() {return "Hikari Lv." + getBuyableAmount(this.layer,this.id) + "/" + this.purchaseLimit()},
+      display() {
+        let base = 1.5
+        if(hasUpgrade("sp",114)) base = base + 0.15
+        return "<br>Multiplying your Fragment gain by " + base + " per level, after softcap.<br>Current effect: x" + format(this.effect()) + "<br>Upgrading will cost " + format(this.cost()) + " Fragments."
       },
-      effect(x) {return new Decimal(2).pow(x)},
+      cost(x) {
+        let scaler = 1
+        if(hasUpgrade("sp",124)) scaler = 0.9
+        return x.add(1).pow(x.mul(scaler).sub(scaler).add(2)).mul(1e13)
+      },
+      purchaseLimit() {return 20},
+      effect(x) {
+        let base = new Decimal(1.5)
+        if(hasUpgrade("sp",114)) base = base.add(0.15)
+        return base.pow(x)
+      },
       canAfford() {return player.f.points.gte(this.cost())},
       buy() {
         player.f.points = player.f.points.sub(this.cost())
-        setBuyableAmount(this.layer,this.id,getBuyableAmount(this.layer, this.id).add(1))
+        setBuyableAmount(this.layer,this.id,getBuyableAmount(this.layer,this.id).add(1))
+      }
+    },
+    12: {
+      title() {return "Tairitsu Lv." + getBuyableAmount(this.layer,this.id) + "/" + this.purchaseLimit()},
+      display() {return "<br>Multiplying your Memory gain by " + "1.5" + " per level, before softcap.<br>Current effect: x" + format(this.effect()) + "<br>Upgrading will cost " + format(this.cost()) + " Memories."},
+      cost(x) {
+        return x.add(1).pow(2).mul(1500)
+      },
+      purchaseLimit() {return 20},
+      effect(x) {return new Decimal(1.5).pow(x)},
+      canAfford() {return player.m.points.gte(this.cost())},
+      buy() {
+        player.m.points = player.m.points.sub(this.cost())
+        setBuyableAmount(this.layer,this.id,getBuyableAmount(this.layer,this.id).add(1))
       }
     }
   },
-  layerShown() {return hasUpgrade("sp",112)}
+  layerShown() {return player.p.unlocked}
 })
 
 
@@ -524,6 +648,10 @@ addLayer("m", {
   gainMult() {
     let mult = new Decimal(1)
     if(hasUpgrade("sp",43)) mult = mult.mul(upgradeEffect("sp",43))
+    if(hasUpgrade("sp",44)) mult = mult.mul(upgradeEffect("sp",44))
+    if(hasUpgrade("sp",111)) mult = mult.mul(upgradeEffect("sp",111))
+    if(hasUpgrade("m",23)) mult = mult.mul(1.5)
+    mult = mult.mul(buyableEffect("p",12))
     return mult
   },
   gainExp() {return new Decimal(1)},
@@ -531,9 +659,12 @@ addLayer("m", {
     if(player.m.points.lte(100000)) return player.m.points.add(1).pow(1.1397931)
     return player.m.points.add(1).pow(player.m.points.log10().mul(0.2279586))},
   effectDescription() {
-    if(hasUpgrade("m",11)) return "multiplying point and Fragment gain by " + format(tmp.m.effect) + ". This applys after all the upgrades, challenges and buyables in the previous layers."
-    return "multiplying Fragment gain by " + format(tmp.m.effect) + ". This applys after all the upgrades, challenges and buyables in the previous layers."
+    let a = "multiplying Fragment gain by "
+    if(hasUpgrade("m",11)) a = "multiplying point and Fragment gain by "
+    return a + format(tmp.m.effect) + ". This applys after all the upgrades, challenges and buyables in the previous layers, before Fragment gain softcap."
   },
+  softcap: new Decimal(1000),
+  softcapPower: 0.3,
   tabFormat: {
     "Main": {
       content: [
@@ -546,7 +677,9 @@ addLayer("m", {
         "blank",
         "blank",
         "blank",
-        "upgrades"
+        ["upgrades",[1]],
+        "blank",
+        ["upgrades",[2]]
       ]
     },
     "Buyables": {
@@ -592,13 +725,18 @@ addLayer("m", {
     },
     3: {
       requirementDescription: "20 Memories",
-      effectDescription: "Keep the 1st-10th Chart Upgrades on reset.",
+      effectDescription: "Keep the 1st-10th Chart Upgrades in \"Arcaea\" on reset.",
       done() {return player.m.points.gte(20)}
     },
     4: {
       requirementDescription: "200 Memories",
-      effectDescription: "Keep the 11st-15th Chart Upgrades on reset.",
+      effectDescription: "Keep the 11st-15th Chart Upgrades in \"Arcaea\" on reset.",
       done() {return player.m.points.gte(200)}
+    },
+    5: {
+      requirementDescription: "10,000 Memories",
+      effectDescription: "Keep the 16th-20th Chart Upgrades in \"Arcaea\" on reset.",
+      done() {return player.m.points.gte(10000)}
     }
   },
   upgrades: {
@@ -614,6 +752,26 @@ addLayer("m", {
       description: "Unlock some buyables. (You'll soon unlock more Song Packs.)",
       cost: new Decimal(500),
       unlocked() {return hasUpgrade(this.layer,11)}
+    },
+    21: {
+      title: "Point Booster",
+      description: "Raise point gain base on Fragments and points. (This upgrade will keep unlocked on Memory reset.)",
+      cost: new Decimal(400),
+      effect() {return player.f.points.mul(player.points).add(1).log10().mul(0.002).add(1)},
+      effectDisplay() {return "^" + format(upgradeEffect(this.layer,this.id),4)},
+      unlocked() {return hasUpgrade(this.layer,12)}
+    },
+    22: {
+      title: "What? Softcap?",
+      description: "Slightly weaken the effect of Fragment gain softcap.",
+      cost: new Decimal(1000),
+      unlocked() {return hasUpgrade(this.layer,21)}
+    },
+    23: {
+      title: "Giving Out Money",
+      description: "Give lowiro 100￡, making you gain 1.5x more Memories. (before softcap)",
+      cost: new Decimal(5000),
+      unlocked() {return hasUpgrade(this.layer,22)}
     }
   },
   buyables: {
@@ -664,13 +822,18 @@ addLayer("ac", {
     },
     12: {
       name: "My Fragments are Full!",
-      tooltip: "Get 29997 Fragments.<br>(In the real game, your Fragments are capped at 29997.)",
+      tooltip: "Get 29,997 Fragments.<br>(In the real game, your Fragments are capped at 29,997.)",
       done() {return player.f.points.gte(29997)}
     },
     13: {
       name: "That Costs About 2￡",
       tooltip: "Get 100 Memories.",
       done() {return player.m.points.gte(100)}
+    },
+    14: {
+      name: "I'm Going to Buy All the Songs",
+      tooltip: "Get 32900 Memories.<br>(In version 6.2.0, all the songs and song packs cost 32,900 Memories in total.)",
+      done() {return player.m.points.gte(32900)}
     }
   },
   layerShown() {return true}
