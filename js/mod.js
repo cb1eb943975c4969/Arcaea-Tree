@@ -13,12 +13,12 @@ let modInfo = {
 // Set your version in num and name
 let VERSION = {
 	num: "0.1.1",
-	name: "Here Come Hikari and Tairitsu",
+	name: "Here are Hikari and Tairitsu",
 }
 
 let changelog = `Credit to ducdat0507 and 0i00000000a7, who helped me to make the news ticker.<br><br>
   <h2>Changelog:</h2><br>
-  <h3>v0.1.1 - Here come Hikari and Tairitsu</h3><br>
+  <h3>v0.1.1 - Here are Hikari and Tairitsu</h3><br>
   - Added the news ticker and a bunch of news messages.<br>
   - Added Partners.<br>
   - Added Hollow Core.<br>
