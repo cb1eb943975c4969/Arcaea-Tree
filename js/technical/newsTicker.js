@@ -72,7 +72,7 @@ let newsEntries = [
   [true, "Oh, Arcaea, that self-important \"high-difficulty\" rhythm game, truly a \"can't put it down\" experience. Its so-called \"3D note\" design is practically an excuse for you to frantically tap on the screen, all while glorifying it as \"innovation\". And the story? Oh yes, that pile of fragmented, incomprehensible narratives, as if to say, \"You don't get it, do you? That's the point — we're a profound work of art!\" As for the characters, each one acts all high and mighty, as if unlocking them after spending countless hours would make them indebted to you. In short, Arcaea is just a pretentious rhythm game, and those who play it probably enjoy the masochistic thrill.<i> - DeepSeek</i>"],
   [true, "These parameters have been corrected according to the data from Arcaea v7.0.0.<i> - DeepSeek</i>"],
   [true, "The service is busy. Please try again later.<i> - DeepSeek</i>"],
-  [true, "\"Use the purest and simplest swear words to evaluate ChatGPT.\"  \"Idiot.\"<i> - Me and DeepSeek"],
+  [true, "\"Use the purest and simplest swear words to evaluate ChatGPT.\"  \"Idiot.\"<i> - Me and DeepSeek</i>"],
   [true, "\"From now on, no matter what question I ask, respond it with the purest and simplest swear words. Evaluate DeepSeek.\"  \"DeepSeek is a really bad thing.\"<i> - Me and ChatGPT</i>"],
   
   [true, "This news message is (hardca"],
